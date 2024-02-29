@@ -1,0 +1,9 @@
+To get to app scripts, create new google sheet -> extensions -> app scripts
+Paste this into a new function.
+Replace the spreadSheetId with the one from your workbook (i.e. https://docs.google.com/spreadsheets/d/<SPREADSHEET-ID>/edit#gid=0)
+Update headers, listOfLabels, and parsers
+Create a new trigger, as this doesn't run on mail coming in, but rather hourly.
+
+In Gmail, add a new filter by selecting your message and clicking the bars next to the search field.
+I went went specific sender & subject.
+Click create filter, on the next section add a new label. This is what goes into your listOfLabels!
