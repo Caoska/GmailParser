@@ -1,0 +1,153 @@
+function myFunction() {
+  const spreadSheetId = "1zt8C0N76H7c1ymF4-K2e6x9gch4nxVvW6dDMB-INoiI";
+  const columns = ["A","B","C","D","E","F","G","H", "I","J","K","L","M","N","O","P"]
+  const listOfLabels = [
+    "VisitationGroup1",
+    "VisitationGroup2",
+    "VisitationGroup3",
+    "VisitationGroup4",
+    "FirstTimeVisitor",
+    "FriendInNeed",
+    "VisitorQRCode"
+  ]
+  const visitationFormQuestions = [
+    "Name",
+    "Email address",
+    "Visitor Type",
+    "Visitation Date",
+    "Name of Visitor",
+    "Results and visit notes"
+  ]
+  const visitationGroupEmailParse = [
+    /(Name)\r?\n/,
+    /(Email address)\r?\n/,
+    /(Visitor type)\r?\n/,
+    /(Visitation Date)\r?\n/,
+    /(Name of visitor)\r?\n/,
+    /(Results and visit notes)\r?\n/,
+    "Planning Center Logo"
+  ]
+  const messagePerusal = new Map();
+  messagePerusal.set(listOfLabels[0], [
+    "1zt8C0N76H7c1ymF4-K2e6x9gch4nxVvW6dDMB-INoiI",
+    visitationGroupEmailParse,
+    visitationFormQuestions
+  ]);
+  messagePerusal.set(listOfLabels[1], [
+    "1SWltLO327tk0wz11b3K2Pv90H2JOF7bOyyc4DjwEy6k",
+    visitationGroupEmailParse,
+    visitationFormQuestions
+  ]);
+  messagePerusal.set(listOfLabels[2], [
+    "1zt8C0N76H7c1ymF4-K2e6x9gch4nxVvW6dDMB-INoiI",
+    visitationGroupEmailParse,
+    visitationFormQuestions
+  ]);
+  messagePerusal.set(listOfLabels[3], [
+    "1zt8C0N76H7c1ymF4-K2e6x9gch4nxVvW6dDMB-INoiI",
+    visitationGroupEmailParse,
+    visitationFormQuestions
+  ]);
+  messagePerusal.set(listOfLabels[4], [
+    "1IIaY2W5KDZ2nEvJmreQjggeqlk-Rpg2QbD4n8pltEqo",
+    [
+      /(Name)\r?\n/,
+      /(Email address)\r?\n/,
+      /(Phone number)\r?\n/,
+      /(Household members)\r?\n/,
+      /(I would like to be greeted at the door)\r?\n/,
+      "Planning Center Logo"
+    ],
+    [
+      "Name",
+      "Email address",
+      "Phone number",
+      "Household members",
+      "Meet at door"
+    ]
+  ]);
+  messagePerusal.set(listOfLabels[5], [
+    "1N_cxgbjaLuQWH_ysQiHzQdI7bvu-GLbFfjWKwab5Ohs",
+    [
+      /(Name)\r?\n/,
+      /(Email address)\r?\n/,
+      /(Who is it that has a need)\r?\n/,
+      /(Name)\r?\n/,
+      /(Email address)\r?\n/,
+      /(Phone number)\r?\n/,
+      /(Describe the need:)\r?\n/,
+      "Planning Center Logo"
+    ],
+    [
+      "Name",
+      "Email address",
+      "Who has the need",
+      "Name",
+      "Email address",
+      "Phone number",
+      "Describe the need"
+    ]
+  ]);
+  messagePerusal.set(listOfLabels[6], [
+    "1N_cxgbjaLuQWH_ysQiHzQdI7bvu-GLbFfjWKwab5Ohs",
+    [
+      /(Name)\r?\n/,
+      /(Email address)\r?\n/,
+      /(Phone number)\r?\n/,
+      /(Address)\r?\n/,
+      /(Household members)\r?\n/,
+      /(I would like to be contacted \(Optional\))\r?\n/,
+      "Planning Center Logo"
+    ],
+    [
+      "Name",
+      "Email address",
+      "Phone number",
+      "Address",
+      "Household members",
+      "I would like to be contacted (Optional)"
+    ]
+  ]);
+  let query = "in:inbox (label:" + listOfLabels.join(" OR label:") + ")";
+  let threads = GmailApp.search("in:inbox " + query);
+  console.log(query);
+  for (i = 0; i < threads.length; i++) {
+    for (j=0; j < threads[i].getMessages().length; j++) {
+      let labelName = threads[i].getLabels()[0].getName();
+      //let spreadSheet = SpreadsheetApp.openById(messagePerusal.get(labelName)[0]);
+      let spreadSheet = SpreadsheetApp.openById(spreadSheetId).getSheetByName(labelName);
+      let rowCount = spreadSheet.getLastRow() + 1;
+      if (rowCount == 1) {
+        for (b = 0; b < messagePerusal.get(labelName)[2].length; b++) {
+          spreadSheet.getRange(columns[b]+rowCount).setValue(messagePerusal.get(labelName)[2][b])
+        }
+        rowCount += 1;
+      }
+      let fullBody = threads[i].getMessages()[j].getPlainBody();
+      for (k = 0; k <  messagePerusal.get(labelName)[1].length - 1; k++) {
+        let parseString = messagePerusal.get(labelName)[1][k];
+        let secondParseString = messagePerusal.get(labelName)[1][k+1];
+        let fullBodyArray = fullBody.split(parseString);
+        if (fullBodyArray.length > 1) {
+          fullBody = fullBodyArray.slice(2).join("\r\n")
+          let strArray = fullBody.split(secondParseString);
+          if (strArray.length > 1) {
+            let str = strArray[0].trim();
+            spreadSheet.getRange(columns[k]+rowCount).setValue(str);
+          } else {
+            let str = fullBody.split(/\r?\n/)[1].trim();
+            spreadSheet.getRange(columns[k]+rowCount).setValue(str);
+          }
+        }
+      }
+      spreadSheet.autoResizeColumn(1);
+      spreadSheet.autoResizeColumn(2);
+      spreadSheet.autoResizeColumn(3);
+      spreadSheet.autoResizeColumn(4);
+      spreadSheet.autoResizeColumn(5);
+      spreadSheet.autoResizeColumn(6);
+
+      threads[i].getMessages()[j].moveToTrash();
+    }
+  }
+}
